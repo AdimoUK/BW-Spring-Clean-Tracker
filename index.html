@@ -287,8 +287,32 @@
   }
 
   @media print {
-    body { background: white; padding: 15px; }
+    @page { margin: 1cm; }
+
+    body { background: white; padding: 0; font-size: 10px; }
+
+    header h1 { font-size: 20px; }
+    header .subtitle { font-size: 11px; }
+
+    .progress-section { display: none; }
+    .prize-unlocked { display: none !important; }
     .reset-btn { display: none; }
+
+    thead th { font-size: 10px; padding: 4px 6px; }
+    td { padding: 3px 6px; }
+
+    .tba-label { display: none; }
+
+    td.quest-col.quest-empty::after,
+    td.notes-col::after {
+      content: '';
+      display: block;
+      height: 14px;
+      border-bottom: 1px dotted #888;
+    }
+
+    td.notes-col input { display: none; }
+
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
@@ -425,7 +449,7 @@
         '<td class="day-num">' + dayNum + '</td>' +
         '<td class="date-col">' + dateStr + badge + '</td>' +
         '<td class="avail-col">' + expiresStr + '</td>' +
-        '<td class="quest-col">' + (questText || '<em style="color:#b09060">TBA</em>') + '</td>' +
+        '<td class="quest-col' + (questText ? '' : ' quest-empty') + '">' + (questText || '<em class="tba-label" style="color:#b09060">TBA</em>') + '</td>' +
         '<td class="notes-col"><input type="text" data-field="notes" data-day="' + dayNum + '" placeholder="Notes..." value="' + notesVal + '"></td>';
 
       tbody.appendChild(tr);
