@@ -297,12 +297,12 @@
 
 <header>
   <h1>&#129529; BadWolfMC Spring Cleaning Challenge</h1>
-  <div class="subtitle">11 May 2026 &ndash; 31 May 2026 &nbsp;|&nbsp; Talk to Cesar at the Mall each day at 05:00 server time</div>
+  <div class="subtitle">11 May 2026 &ndash; 31 May 2026 &nbsp;|&nbsp; Talk to Cesar at the Mall each day at 0:00am ET</div>
 </header>
 
 <div class="meta-row">
   <span><strong>Runs:</strong> 21 days</span>
-  <span><strong>Daily reset:</strong> midnight ET</span>
+  <span><strong>Daily reset:</strong> 0:00am ET<span id="local-reset-time"></span></span>
   <span><strong>Goal:</strong> 18 / 21 days</span>
 </div>
 
@@ -357,7 +357,7 @@
 <button class="reset-btn" id="reset-btn">Reset all progress</button>
 
 <footer>
-  Tick each day after visiting Cesar. Progress saves automatically in this browser. Tasks reset at 05:00 server time (midnight Eastern). Highlighted row = today.
+  Tick each day after visiting Cesar. Progress saves automatically in this browser. Tasks reset at 0:00am ET each day. Expiry times shown in your local timezone. Highlighted row = today.
 </footer>
 
 <script>
@@ -404,7 +404,8 @@
       var isDone  = !!state.checked[dayNum];
 
       var dateStr    = avail.toLocaleDateString('en-GB', dateOpts);
-      var expiresStr = expires.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' midnight ET';
+      var localExpireTime = expires.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var expiresStr = expires.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + localExpireTime;
       var badge      = isToday ? '<span class="badge badge-today">Today!</span>' : '';
       var questText  = (quests[dayNum] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
       var notesVal   = (state.notes[dayNum] || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -503,6 +504,12 @@
   });
 
   updateProgress();
+
+  var localResetEl = document.getElementById('local-reset-time');
+  if (localResetEl) {
+    var localResetTime = new Date('2026-05-11T04:00:00Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    localResetEl.textContent = ' (' + localResetTime + ' your time)';
+  }
 </script>
 
 </body>
