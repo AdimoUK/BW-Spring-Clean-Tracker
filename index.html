@@ -164,7 +164,7 @@
 
   td.quest-col, td.notes-col { min-width: 150px; }
 
-  td.quest-col input, td.notes-col input {
+  td.notes-col input {
     width: 100%;
     border: none;
     border-bottom: 1px dotted #b09060;
@@ -176,7 +176,7 @@
     outline: none;
   }
 
-  td.quest-col input:focus, td.notes-col input:focus {
+  td.notes-col input:focus {
     border-bottom-color: #7a5c2e;
     background: rgba(255,248,200,0.4);
   }
@@ -302,8 +302,7 @@
 
 <div class="meta-row">
   <span><strong>Runs:</strong> 21 days</span>
-  <span><strong>Daily reset:</strong> 05:00 server / midnight ET</span>
-  <span><strong>Missed days:</strong> gone for good, no catch-up</span>
+  <span><strong>Daily reset:</strong> midnight ET</span>
   <span><strong>Goal:</strong> 18 / 21 days</span>
 </div>
 
@@ -365,14 +364,14 @@
   var STORAGE_KEY = 'bwmc-spring-2026';
   var TOTAL_DAYS  = 21;
   var NEED        = 18;
-  var startDate   = new Date('2026-05-11T05:00:00');
+  var startDate   = new Date('2026-05-11T04:00:00Z');
 
   function loadState() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : { checked: {}, quests: {}, notes: {} };
+      return raw ? JSON.parse(raw) : { checked: {}, notes: {} };
     } catch(e) {
-      return { checked: {}, quests: {}, notes: {} };
+      return { checked: {}, notes: {} };
     }
   }
 
@@ -394,42 +393,48 @@
   var dateOpts = { weekday: 'short', day: 'numeric', month: 'short' };
   var tbody = document.getElementById('table-body');
 
-  for (var i = 0; i < TOTAL_DAYS; i++) {
-    var dayNum = i + 1;
-    var dates   = getDayDates(i);
-    var avail   = dates.avail;
-    var expires = dates.expires;
+  function buildTable(quests) {
+    for (var i = 0; i < TOTAL_DAYS; i++) {
+      var dayNum = i + 1;
+      var dates   = getDayDates(i);
+      var avail   = dates.avail;
+      var expires = dates.expires;
 
-    var isToday = today >= avail && today < expires;
-    var isDone  = !!state.checked[dayNum];
+      var isToday = today >= avail && today < expires;
+      var isDone  = !!state.checked[dayNum];
 
-    var dateStr    = avail.toLocaleDateString('en-GB', dateOpts);
-    var expiresStr = expires.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' 05:00';
-    var badge      = isToday ? '<span class="badge badge-today">Today!</span>' : '';
+      var dateStr    = avail.toLocaleDateString('en-GB', dateOpts);
+      var expiresStr = expires.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' midnight ET';
+      var badge      = isToday ? '<span class="badge badge-today">Today!</span>' : '';
+      var questText  = (quests[dayNum] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      var notesVal   = (state.notes[dayNum] || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 
-    var tr = document.createElement('tr');
-    tr.id = 'row-' + dayNum;
-    if (isDone)  tr.classList.add('done');
-    if (isToday) tr.classList.add('today');
+      var tr = document.createElement('tr');
+      tr.id = 'row-' + dayNum;
+      if (isDone)  tr.classList.add('done');
+      if (isToday) tr.classList.add('today');
 
-    var questVal = (state.quests[dayNum] || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    var notesVal = (state.notes[dayNum]  || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      tr.innerHTML =
+        '<td class="check-col">' +
+          '<label class="cb-wrap" title="Mark day ' + dayNum + ' complete">' +
+            '<input type="checkbox" data-day="' + dayNum + '"' + (isDone ? ' checked' : '') + '>' +
+            '<span class="cb-box"></span>' +
+          '</label>' +
+        '</td>' +
+        '<td class="day-num">' + dayNum + '</td>' +
+        '<td class="date-col">' + dateStr + badge + '</td>' +
+        '<td class="avail-col">' + expiresStr + '</td>' +
+        '<td class="quest-col">' + (questText || '<em style="color:#b09060">TBA</em>') + '</td>' +
+        '<td class="notes-col"><input type="text" data-field="notes" data-day="' + dayNum + '" placeholder="Notes..." value="' + notesVal + '"></td>';
 
-    tr.innerHTML =
-      '<td class="check-col">' +
-        '<label class="cb-wrap" title="Mark day ' + dayNum + ' complete">' +
-          '<input type="checkbox" data-day="' + dayNum + '"' + (isDone ? ' checked' : '') + '>' +
-          '<span class="cb-box"></span>' +
-        '</label>' +
-      '</td>' +
-      '<td class="day-num">' + dayNum + '</td>' +
-      '<td class="date-col">' + dateStr + badge + '</td>' +
-      '<td class="avail-col">' + expiresStr + '</td>' +
-      '<td class="quest-col"><input type="text" data-field="quest" data-day="' + dayNum + '" placeholder="e.g. 32x cobblestone..." value="' + questVal + '"></td>' +
-      '<td class="notes-col"><input type="text" data-field="notes" data-day="' + dayNum + '" placeholder="Notes..." value="' + notesVal + '"></td>';
-
-    tbody.appendChild(tr);
+      tbody.appendChild(tr);
+    }
   }
+
+  fetch('quests.json')
+    .then(function(r) { return r.json(); })
+    .then(function(quests) { buildTable(quests); })
+    .catch(function() { buildTable({}); });
 
   tbody.addEventListener('change', function(e) {
     if (e.target.type !== 'checkbox') return;
@@ -454,13 +459,8 @@
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function() {
       var dayNum = parseInt(e.target.getAttribute('data-day'));
-      var field  = e.target.getAttribute('data-field');
       var val    = e.target.value;
-      if (field === 'quest') {
-        if (val) state.quests[dayNum] = val; else delete state.quests[dayNum];
-      } else if (field === 'notes') {
-        if (val) state.notes[dayNum] = val; else delete state.notes[dayNum];
-      }
+      if (val) state.notes[dayNum] = val; else delete state.notes[dayNum];
       saveState();
     }, 400);
   });
@@ -489,15 +489,13 @@
 
   document.getElementById('reset-btn').addEventListener('click', function() {
     if (!confirm('Reset all ticks and notes? This cannot be undone.')) return;
-    state = { checked: {}, quests: {}, notes: {} };
+    state = { checked: {}, notes: {} };
     saveState();
     for (var i = 1; i <= TOTAL_DAYS; i++) {
       var cb = tbody.querySelector('input[type="checkbox"][data-day="' + i + '"]');
       if (cb) cb.checked = false;
       var tr = document.getElementById('row-' + i);
       if (tr) tr.classList.remove('done');
-      var qi = tbody.querySelector('input[data-field="quest"][data-day="' + i + '"]');
-      if (qi) qi.value = '';
       var ni = tbody.querySelector('input[data-field="notes"][data-day="' + i + '"]');
       if (ni) ni.value = '';
     }
