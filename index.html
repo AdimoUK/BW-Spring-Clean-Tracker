@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spring Cleaning Challenge Tracker</title>
+<script defer src="https://tracking.borders.website/script.js" data-website-id="232af7ff-d636-46a4-9f37-fbc371a88347"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: #f5f0e8;
+    color: #2a1f0e;
+    padding: 30px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    border-bottom: 3px double #7a5c2e;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    color: #4a2e0a;
+    letter-spacing: 0.5px;
+  }
+
+  header .subtitle {
+    font-size: 13px;
+    color: #7a5c2e;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #5a4020;
+    margin-bottom: 18px;
+    border: 1px solid #c8a96e;
+    background: #fdf8ef;
+    padding: 10px 14px;
+    border-radius: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .meta-row span strong { color: #3a1f00; }
+
+  .prize-box {
+    background: #fdf3d0;
+    border: 2px solid #c8a000;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    text-align: center;
+    color: #5a3c00;
+  }
+
+  .prize-box strong { color: #3a2000; font-size: 14px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: #4a2e0a;
+    color: #fdf8ef;
+    padding: 8px 10px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-align: left;
+    letter-spacing: 0.5px;
+  }
+
+  thead th:first-child { width: 42px; text-align: center; }
+  thead th:nth-child(2) { width: 34px; }
+  thead th:nth-child(3) { width: 120px; }
+  thead th:nth-child(4) { width: 110px; }
+
+  tbody tr { border-bottom: 1px solid #d4b896; }
+  tbody tr:nth-child(even) { background: #fdf8ef; }
+  tbody tr:nth-child(odd)  { background: #f8f1e3; }
+
+  tbody tr.done   { background: #edf7ed !important; }
+  tbody tr.today  { background: #fff8e1 !important; outline: 2px solid #c8a000; outline-offset: -2px; }
+  tbody tr.done.today { background: #dff0df !important; }
+
+  td { padding: 7px 10px; vertical-align: middle; }
+  td.check-col { text-align: center; }
+
+  .cb-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+  }
+
+  .cb-wrap input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .cb-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #7a5c2e;
+    border-radius: 3px;
+    background: white;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .cb-wrap:hover .cb-box { border-color: #4a2e0a; background: #fdf3d0; }
+
+  .cb-wrap input:checked + .cb-box { background: #2a7a2a; border-color: #1a5a1a; }
+
+  .cb-wrap input:checked + .cb-box::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0px;
+    width: 7px;
+    height: 13px;
+    border-right: 2.5px solid white;
+    border-bottom: 2.5px solid white;
+    transform: rotate(40deg);
+  }
+
+  td.day-num  { font-weight: 600; color: #7a5c2e; font-size: 12px; }
+  td.date-col { font-weight: 600; }
+  td.avail-col { font-size: 11px; color: #5a4020; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-style: normal;
+    vertical-align: middle;
+    margin-left: 4px;
+    font-family: 'Source Serif 4', serif;
+  }
+
+  .badge-today { background: #ffe082; color: #5a3c00; }
+
+  td.quest-col, td.notes-col { min-width: 150px; }
+
+  td.quest-col input, td.notes-col input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px dotted #b09060;
+    background: transparent;
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 12px;
+    color: #2a1f0e;
+    padding: 2px 0;
+    outline: none;
+  }
+
+  td.quest-col input:focus, td.notes-col input:focus {
+    border-bottom-color: #7a5c2e;
+    background: rgba(255,248,200,0.4);
+  }
+
+  .progress-section {
+    margin-top: 18px;
+    border: 1px solid #c8a96e;
+    background: #fdf8ef;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tally-row { display: flex; gap: 16px; }
+
+  .tally { text-align: center; }
+  .tally .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: #4a2e0a;
+    display: block;
+    transition: color 0.3s;
+  }
+  .tally .num.achieved { color: #1a7a1a; }
+  .tally .lbl {
+    font-size: 10px;
+    color: #7a5c2e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .progress-bar-section { flex: 1; min-width: 180px; }
+  .progress-label { margin-bottom: 4px; color: #5a4020; font-size: 12px; }
+
+  .progress-bar-wrap {
+    height: 16px;
+    background: #e0d0b0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #c8a96e;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: #6aad6a;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-bar-fill.achieved { background: #2a8a2a; }
+
+  .threshold-line {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: #c8a000;
+    left: 85.71%;
+    pointer-events: none;
+  }
+
+  .bar-note { font-size: 10px; color: #8a6020; margin-top: 3px; }
+
+  .prize-unlocked {
+    display: none;
+    background: #c8ecc8;
+    border: 2px solid #2a7a2a;
+    border-radius: 4px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #1a5a1a;
+    font-weight: 600;
+    margin-top: 14px;
+  }
+
+  .prize-unlocked.show { display: block; }
+
+  .reset-btn {
+    display: block;
+    margin: 14px auto 0;
+    background: none;
+    border: 1px solid #c8a96e;
+    border-radius: 3px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-family: 'Source Serif 4', serif;
+    color: #9a7a50;
+    cursor: pointer;
+  }
+
+  .reset-btn:hover { background: #f0e0c0; color: #5a3a10; }
+
+  footer {
+    margin-top: 16px;
+    font-size: 10.5px;
+    color: #9a7a50;
+    text-align: center;
+    font-style: italic;
+    border-top: 1px solid #d4b896;
+    padding-top: 10px;
+  }
+
+  @media print {
+    body { background: white; padding: 15px; }
+    .reset-btn { display: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#129529; BadWolfMC Spring Cleaning Challenge</h1>
+  <div class="subtitle">11 May 2026 &ndash; 31 May 2026 &nbsp;|&nbsp; Talk to Cesar at the Mall each day at 05:00 server time</div>
+</header>
+
+<div class="meta-row">
+  <span><strong>Runs:</strong> 21 days</span>
+  <span><strong>Daily reset:</strong> 05:00 server / midnight ET</span>
+  <span><strong>Missed days:</strong> gone for good, no catch-up</span>
+  <span><strong>Goal:</strong> 18 / 21 days</span>
+</div>
+
+<div class="prize-box">
+  <strong>&#127959; Grand Prize: Unbreakable Feather Duster</strong><br>
+  Complete at least <strong>18 out of 21</strong> days. You can miss up to <strong>3 days</strong> and still qualify.
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Done</th>
+      <th>Day</th>
+      <th>Date</th>
+      <th>Expires</th>
+      <th>Quest / Items Requested</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody id="table-body"></tbody>
+</table>
+
+<div class="prize-unlocked" id="prize-banner">
+  &#127959; Prize unlocked! You have hit 18 days -- the Unbreakable Feather Duster is yours!
+</div>
+
+<div class="progress-section">
+  <div class="tally-row">
+    <div class="tally">
+      <span class="num" id="done-count">0</span>
+      <span class="lbl">Done</span>
+    </div>
+    <div class="tally">
+      <span class="num" id="remain-count">18</span>
+      <span class="lbl">Still need</span>
+    </div>
+    <div class="tally">
+      <span class="num" id="can-miss-count">3</span>
+      <span class="lbl">Can miss</span>
+    </div>
+  </div>
+  <div class="progress-bar-section">
+    <div class="progress-label">Progress to prize (18 / 21 days)</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-fill" style="width:0%"></div>
+      <div class="threshold-line" title="18/21 threshold"></div>
+    </div>
+    <div class="bar-note">Gold line = 18-day threshold</div>
+  </div>
+</div>
+
+<button class="reset-btn" id="reset-btn">Reset all progress</button>
+
+<footer>
+  Tick each day after visiting Cesar. Progress saves automatically in this browser. Tasks reset at 05:00 server time (midnight Eastern). Highlighted row = today.
+</footer>
+
+<script>
+  var STORAGE_KEY = 'bwmc-spring-2026';
+  var TOTAL_DAYS  = 21;
+  var NEED        = 18;
+  var startDate   = new Date('2026-05-11T05:00:00');
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : { checked: {}, quests: {}, notes: {} };
+    } catch(e) {
+      return { checked: {}, quests: {}, notes: {} };
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  var state = loadState();
+  var today = new Date();
+
+  function getDayDates(i) {
+    var avail = new Date(startDate);
+    avail.setDate(avail.getDate() + i);
+    var expires = new Date(avail);
+    expires.setDate(expires.getDate() + 1);
+    return { avail: avail, expires: expires };
+  }
+
+  var dateOpts = { weekday: 'short', day: 'numeric', month: 'short' };
+  var tbody = document.getElementById('table-body');
+
+  for (var i = 0; i < TOTAL_DAYS; i++) {
+    var dayNum = i + 1;
+    var dates   = getDayDates(i);
+    var avail   = dates.avail;
+    var expires = dates.expires;
+
+    var isToday = today >= avail && today < expires;
+    var isDone  = !!state.checked[dayNum];
+
+    var dateStr    = avail.toLocaleDateString('en-GB', dateOpts);
+    var expiresStr = expires.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' 05:00';
+    var badge      = isToday ? '<span class="badge badge-today">Today!</span>' : '';
+
+    var tr = document.createElement('tr');
+    tr.id = 'row-' + dayNum;
+    if (isDone)  tr.classList.add('done');
+    if (isToday) tr.classList.add('today');
+
+    var questVal = (state.quests[dayNum] || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    var notesVal = (state.notes[dayNum]  || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+
+    tr.innerHTML =
+      '<td class="check-col">' +
+        '<label class="cb-wrap" title="Mark day ' + dayNum + ' complete">' +
+          '<input type="checkbox" data-day="' + dayNum + '"' + (isDone ? ' checked' : '') + '>' +
+          '<span class="cb-box"></span>' +
+        '</label>' +
+      '</td>' +
+      '<td class="day-num">' + dayNum + '</td>' +
+      '<td class="date-col">' + dateStr + badge + '</td>' +
+      '<td class="avail-col">' + expiresStr + '</td>' +
+      '<td class="quest-col"><input type="text" data-field="quest" data-day="' + dayNum + '" placeholder="e.g. 32x cobblestone..." value="' + questVal + '"></td>' +
+      '<td class="notes-col"><input type="text" data-field="notes" data-day="' + dayNum + '" placeholder="Notes..." value="' + notesVal + '"></td>';
+
+    tbody.appendChild(tr);
+  }
+
+  tbody.addEventListener('change', function(e) {
+    if (e.target.type !== 'checkbox') return;
+    var dayNum = parseInt(e.target.getAttribute('data-day'));
+    if (e.target.checked) {
+      state.checked[dayNum] = true;
+    } else {
+      delete state.checked[dayNum];
+    }
+    saveState();
+    var tr = document.getElementById('row-' + dayNum);
+    if (tr) {
+      if (e.target.checked) tr.classList.add('done');
+      else tr.classList.remove('done');
+    }
+    updateProgress();
+  });
+
+  var debounceTimer;
+  tbody.addEventListener('input', function(e) {
+    if (e.target.tagName !== 'INPUT' || e.target.type !== 'text') return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+      var dayNum = parseInt(e.target.getAttribute('data-day'));
+      var field  = e.target.getAttribute('data-field');
+      var val    = e.target.value;
+      if (field === 'quest') {
+        if (val) state.quests[dayNum] = val; else delete state.quests[dayNum];
+      } else if (field === 'notes') {
+        if (val) state.notes[dayNum] = val; else delete state.notes[dayNum];
+      }
+      saveState();
+    }, 400);
+  });
+
+  function updateProgress() {
+    var doneCount = Object.keys(state.checked).length;
+    var remaining = Math.max(0, NEED - doneCount);
+    var canMiss   = Math.max(0, TOTAL_DAYS - doneCount - remaining);
+    var pct       = (doneCount / TOTAL_DAYS) * 100;
+    var achieved  = doneCount >= NEED;
+
+    document.getElementById('done-count').textContent    = doneCount;
+    document.getElementById('remain-count').textContent  = remaining;
+    document.getElementById('can-miss-count').textContent = canMiss;
+
+    var fill = document.getElementById('prog-fill');
+    fill.style.width = pct.toFixed(1) + '%';
+    if (achieved) fill.classList.add('achieved'); else fill.classList.remove('achieved');
+
+    var doneEl = document.getElementById('done-count');
+    if (achieved) doneEl.classList.add('achieved'); else doneEl.classList.remove('achieved');
+
+    var banner = document.getElementById('prize-banner');
+    if (achieved) banner.classList.add('show'); else banner.classList.remove('show');
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    if (!confirm('Reset all ticks and notes? This cannot be undone.')) return;
+    state = { checked: {}, quests: {}, notes: {} };
+    saveState();
+    for (var i = 1; i <= TOTAL_DAYS; i++) {
+      var cb = tbody.querySelector('input[type="checkbox"][data-day="' + i + '"]');
+      if (cb) cb.checked = false;
+      var tr = document.getElementById('row-' + i);
+      if (tr) tr.classList.remove('done');
+      var qi = tbody.querySelector('input[data-field="quest"][data-day="' + i + '"]');
+      if (qi) qi.value = '';
+      var ni = tbody.querySelector('input[data-field="notes"][data-day="' + i + '"]');
+      if (ni) ni.value = '';
+    }
+    updateProgress();
+  });
+
+  updateProgress();
+</script>
+
+</body>
+</html>
