@@ -208,6 +208,7 @@
     transition: color 0.3s;
   }
   .tally .num.achieved { color: #1a7a1a; }
+  .tally .num.danger   { color: #b02020; }
   .tally .lbl {
     font-size: 10px;
     color: #7a5c2e;
@@ -497,13 +498,24 @@
   function updateProgress() {
     var doneCount = Object.keys(state.checked).length;
     var remaining = Math.max(0, NEED - doneCount);
-    var canMiss   = Math.max(0, TOTAL_DAYS - doneCount - remaining);
-    var pct       = (doneCount / TOTAL_DAYS) * 100;
-    var achieved  = doneCount >= NEED;
+
+    var msPerDay     = 24 * 60 * 60 * 1000;
+    var expiredDays  = Math.min(TOTAL_DAYS, Math.max(0, Math.floor((today - startDate) / msPerDay)));
+    var missedSoFar  = 0;
+    for (var d = 1; d <= expiredDays; d++) {
+      if (!state.checked[d]) missedSoFar++;
+    }
+    var canMissNum     = 3 - missedSoFar;
+    var canMissDisplay = canMissNum < 0 ? '-' : String(canMissNum);
+
+    var pct      = (doneCount / TOTAL_DAYS) * 100;
+    var achieved = doneCount >= NEED;
 
     document.getElementById('done-count').textContent    = doneCount;
     document.getElementById('remain-count').textContent  = remaining;
-    document.getElementById('can-miss-count').textContent = canMiss;
+    var canMissEl = document.getElementById('can-miss-count');
+    canMissEl.textContent = canMissDisplay;
+    if (canMissNum <= 0) canMissEl.classList.add('danger'); else canMissEl.classList.remove('danger');
 
     var fill = document.getElementById('prog-fill');
     fill.style.width = pct.toFixed(1) + '%';
