@@ -461,7 +461,7 @@
     }
   }
 
-  fetch('quests.json')
+  fetch('quests.json?v=' + Date.now())
     .then(function(r) { return r.json(); })
     .then(function(quests) { buildTable(quests); })
     .catch(function() { buildTable({}); });
